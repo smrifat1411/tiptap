@@ -14,11 +14,13 @@ on:
     branches:
       - main
       - next
+      - maintenance/v3
       - release/*
   pull_request:
     branches:
       - main
       - next
+      - maintenance/v3
       - release/*
 
 jobs:
