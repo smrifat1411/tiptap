@@ -2,4 +2,4 @@
 '@tiptap/core': patch
 ---
 
-Fix JSX runtime to properly render nested sibling elements by spreading children arrays into DOMOutputSpec
+Fixes JSX output so nested sibling elements render correctly.
