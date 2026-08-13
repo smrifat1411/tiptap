@@ -37,6 +37,34 @@ export function Fragment(props: { children: JSXRenderer[] }) {
   return props.children
 }
 
+function isDOMOutputSpec(elements: Array<unknown>): boolean {
+  const firstElement = elements[0]
+  const secondElement = elements.length > 1 ? elements[1] : undefined
+
+  // Check if the first element is a string (tag name)
+  if (typeof firstElement !== 'string') {
+    return false
+  }
+
+  // when the second element is a string, undefined or 0, it is considered a valid DOMOutputSpec
+  // 0 is used to indicate a content hole in ProseMirror's DOMOutputSpec
+  if (secondElement === undefined || secondElement === 0 || typeof secondElement === 'string') {
+    return true
+  }
+
+  if (typeof secondElement === 'object' && secondElement !== null) {
+    // if the second element is an object, it can be either an attributes object or another DOMOutputSpecArray
+    if (!Array.isArray(secondElement)) {
+      return true
+    }
+
+    // if the second element is an array, check if it is a valid DOMOutputSpecArray
+    return typeof secondElement[0] === 'string'
+  }
+
+  return false
+}
+
 export const h: JSXRenderer = (tag, attributes) => {
   // Treat the slot tag as the Prosemirror hole to render content into
   if (tag === 'slot') {
@@ -56,46 +84,27 @@ export const h: JSXRenderer = (tag, attributes) => {
     )
   }
 
-  // Handle children array by spreading elements
   if (Array.isArray(children)) {
     if (children.length === 0) {
-      // Empty array means no children
       return [tag, rest]
     }
 
-    // Check if this is a DOMOutputSpecArray (single child) or an array of children
-    // DOMOutputSpecArray always starts with a string tag as the first element,
-    // optionally followed by attributes object, 0 (content hole), or another DOMOutputSpecArray
-    // Note: We only check if firstElement is a string because per ProseMirror spec,
-    // DOMOutputSpec MUST start with a tag name (string). The 0 can only appear
-    // as a subsequent element to mark content insertion points.
-    const firstElement = children[0]
-    const secondElement = children.length > 1 ? children[1] : undefined
-    const isDOMOutputSpec =
-      typeof firstElement === 'string' &&
-      (secondElement === undefined ||
-        secondElement === 0 ||
-        typeof secondElement === 'string' ||
-        (typeof secondElement === 'object' && secondElement !== null && !Array.isArray(secondElement)) ||
-        (Array.isArray(secondElement) && typeof secondElement[0] === 'string'))
-
-    if (isDOMOutputSpec) {
-      // This is a single DOMOutputSpecArray child, not multiple children
+    // This is a single DOMOutputSpecArray child, not multiple children.
+    if (isDOMOutputSpec(children)) {
       return [tag, rest, children]
     }
 
-    // Filter out null/undefined values from array of children
+    // Filter out null or undefined children.
     const validChildren = children.filter(child => child != null)
 
     if (validChildren.length === 0) {
       return [tag, rest]
     }
 
-    // Spread children into the result array
+    // Spread multiple children into the result array.
     return [tag, rest, ...validChildren]
   }
 
-  // Single child or no children
   if (children !== undefined && children !== null) {
     return [tag, rest, children]
   }
