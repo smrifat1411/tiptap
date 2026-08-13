@@ -65,6 +65,25 @@ function isDOMOutputSpec(elements: Array<unknown>): boolean {
   return false
 }
 
+/**
+ * Creates a ProseMirror DOM output specification from a JSX element.
+ *
+ * Multiple children in the `children` array are added as sibling elements.
+ *
+ * @param tag The element name or component to render.
+ * @param attributes The element attributes and optional children.
+ * @returns The rendered ProseMirror DOM output specification.
+ * @example
+ * ```ts
+ * h('p', {
+ *   children: [
+ *     h('strong', { children: 'Hello' }),
+ *     h('em', { children: 'world' }),
+ *   ],
+ * })
+ * // ['p', {}, ['strong', {}, 'Hello'], ['em', {}, 'world']]
+ * ```
+ */
 export const h: JSXRenderer = (tag, attributes) => {
   // Treat the slot tag as the Prosemirror hole to render content into
   if (tag === 'slot') {
